@@ -16,7 +16,7 @@ class Form(StatesGroup):
     waiting_for_limit = State()
     waiting_for_topup = State()
 
-API_TOKEN = ""
+BOT_TOKEN = ""
 PAYMENT_PROVIDER_TOKEN = ""
 RARE_STAR_THRESHOLD = 101
 REQUEST_DELAY = 1

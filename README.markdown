@@ -20,7 +20,6 @@
 💰 **Цена договорная** — обсудим и найдём идеальный вариант!  
 
 📩 **Для покупки пишите**: [t.me/sacoq](https://t.me/sacoq)  
-✅ **Гарант сделки**: [t.me/GarantBotSa_bot](https://t.me/GarantBotSa_bot)  
 
 🚀 **Автоматизируйте покупку подарков и будьте впереди всех!**
 
@@ -44,7 +43,6 @@
 💰 **Price is negotiable** — let's discuss and find the perfect deal!  
 
 📩 **To purchase, contact**: [t.me/sacoq](https://t.me/sacoq)  
-✅ **Guarantor**: [t.me/GarantBotSa_bot](https://t.me/GarantBotSa_bot)  
 
 🚀 **Automate your gift purchases and stay ahead of the game!**
 

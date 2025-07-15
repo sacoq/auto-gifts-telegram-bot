@@ -16,12 +16,12 @@ class Form(StatesGroup):
     waiting_for_limit = State()
     waiting_for_topup = State()
 
-BOT_TOKEN = ""
-PAYMENT_PROVIDER_TOKEN = ""
+API_TOKEN = "" # ТОКЕН БОТА
+PAYMENT_PROVIDER_TOKEN = "" # ТУТ НИЧЕГО НЕ ПИСАТЬ
 RARE_STAR_THRESHOLD = 101
 REQUEST_DELAY = 1
 MAX_RETRIES = 3
-ADMIN_ID = 812935135
+ADMIN_ID = 812935135 # АЙДИ АДМИНА
 
 dp = Dispatcher()
 bot = Bot(token=API_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))

@@ -18,8 +18,11 @@
 📸 **Демо**: 
 
 [БОТ](https://t.me/Podddarki_bot)
+
 [КОНСОЛЬНЫЙ СКРИПТ ручной режим](https://ibb.co/cS7DRS3K)
+
 [КОНСОЛЬНЫЙ СКРИПТ автоматический режим](https://ibb.co/JFtnTY4t)
+
 ⚙️ **Гибкость**: можно убрать вайтлист или добавить комиссию за пополнение.  
 💰 **Цена договорная** — обсудим и найдём идеальный вариант!  
 
@@ -42,7 +45,13 @@
   - **Console script** — for bots already running on scripts. Purchase gifts from their balance!  
   - **Script with Telegram interface** — intuitive, simple, and effective.  
 
-📸 **Demo**: [t.me/Podddarki_bot](https://t.me/Podddarki_bot)  
+📸 **Demo**:
+ 
+[BOT](https://t.me/Podddarki_bot)
+
+[CONSOLE SCREEN MANUAL MODE](https://ibb.co/cS7DRS3K)
+
+[CONSOLE SCREEN AUTOMATIC MODE](https://ibb.co/JFtnTY4t)
 ⚙️ **Flexibility**: whitelist can be removed, and a replenishment commission can be added.  
 💰 **Price is negotiable** — let's discuss and find the perfect deal!  
 

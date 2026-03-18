@@ -2,7 +2,7 @@
 
 # ==============================================
 # ПОЛНАЯ УСТАНОВКА VPN БАЛАНСИРОВЩИКА
-# ИСПРАВЛЕННАЯ ВЕРСИЯ - МАРТ 2026
+# ИСПРАВЛЕННАЯ ВЕРСИЯ 2.0 - БЕЗ ОШИБОК ПАРСИНГА
 # ==============================================
 
 set -e  # Прерывать при ошибке
@@ -13,6 +13,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
+MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
 # Функция для вывода с временной меткой
@@ -33,13 +34,13 @@ check_success() {
 # Логотип
 clear
 echo -e "${BLUE}"
-echo '╔══════════════════════════════════════════════════════════════════╗'
-echo '║                                                                  ║'
-echo '║           VPN БАЛАНСИРОВЩИК - ПОЛНАЯ УСТАНОВКА                   ║'
-echo '║           Приватный репозиторий + Авто-обновление               ║'
-echo '║           Версия 2.0 - Исправленная                             ║'
-echo '║                                                                  ║'
-echo '╚══════════════════════════════════════════════════════════════════╝'
+echo '╔══════════════════════════════════════════════════════════════════════╗'
+echo '║                                                                      ║'
+echo '║           VPN БАЛАНСИРОВЩИК - ПОЛНАЯ УСТАНОВКА                       ║'
+echo '║           Приватный репозиторий + Авто-обновление                   ║'
+echo '║           Версия 2.0 - ИСПРАВЛЕННАЯ                                 ║'
+echo '║                                                                      ║'
+echo '╚══════════════════════════════════════════════════════════════════════╝'
 echo -e "${NC}"
 echo ""
 
@@ -56,9 +57,9 @@ fi
 # ЗАПРОС ДАННЫХ
 # ==============================================
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}📝 Введите данные для доступа к ПРИВАТНОМУ репозиторию:${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}📝 ВВЕДИТЕ ДАННЫЕ ДЛЯ ДОСТУПА К ПРИВАТНОМУ РЕПОЗИТОРИЮ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 read -p "👉 GitHub username: " GITHUB_USER
@@ -80,13 +81,14 @@ while [ -z "$KEYS_FILE" ]; do
 done
 
 echo -e "${YELLOW}👉 Введите GitHub Personal Access Token (с доступом к repo):${NC}"
-read -s "GITHUB_TOKEN"
+read -s GITHUB_TOKEN
+echo ""
 while [ -z "$GITHUB_TOKEN" ]; do
     echo -e "${RED}Токен не может быть пустым${NC}"
     echo -e "${YELLOW}👉 Введите GitHub Personal Access Token:${NC}"
-    read -s "GITHUB_TOKEN"
+    read -s GITHUB_TOKEN
+    echo ""
 done
-echo ""
 
 read -p "👉 Порт для VLESS (по умолчанию 443): " XRAY_PORT
 XRAY_PORT=${XRAY_PORT:-443}
@@ -96,9 +98,9 @@ XRAY_PORT=${XRAY_PORT:-443}
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}🔍 ПРОВЕРКА ДОСТУПА К РЕПОЗИТОРИЮ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 log "Проверяю доступ к файлу ${KEYS_FILE} в репозитории ${GITHUB_USER}/${REPO_NAME}..."
@@ -110,20 +112,20 @@ if [ "$HTTP_CODE" = "200" ]; then
     echo -e "${GREEN}✅ Доступ к файлу подтвержден! (HTTP 200)${NC}"
     
     # Показываем первые несколько строк файла для подтверждения
-    echo -e "${CYAN}Первые несколько строк файла:${NC}"
+    echo -e "${CYAN}Первые 3 строки файла:${NC}"
     curl -s -H "Authorization: token ${GITHUB_TOKEN}" \
          -H "Accept: application/vnd.github.v3.raw" \
-         "https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${KEYS_FILE}" | head -5
+         "https://api.github.com/repos/${GITHUB_USER}/${REPO_NAME}/contents/${KEYS_FILE}" | head -3
     echo ""
 else
     echo -e "${RED}❌ Ошибка доступа к файлу (код: $HTTP_CODE)${NC}"
     echo ""
     echo "Возможные причины:"
-    echo "  ❌ Неправильное имя пользователя: ${GITHUB_USER}"
-    echo "  ❌ Неправильное название репозитория: ${REPO_NAME}"
-    echo "  ❌ Неправильное имя файла: ${KEYS_FILE}"
-    echo "  ❌ Токен не имеет доступа к repo"
-    echo "  ❌ Репозиторий не существует или файл удален"
+    echo "  • Неправильное имя пользователя: ${GITHUB_USER}"
+    echo "  • Неправильное название репозитория: ${REPO_NAME}"
+    echo "  • Неправильное имя файла: ${KEYS_FILE}"
+    echo "  • Токен не имеет доступа к repo"
+    echo "  • Репозиторий не существует или файл удален"
     echo ""
     echo "Проверьте данные и запустите скрипт заново"
     exit 1
@@ -134,9 +136,9 @@ fi
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}📦 1. ОБНОВЛЕНИЕ СИСТЕМЫ И УСТАНОВКА ЗАВИСИМОСТЕЙ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 log "Обновление списка пакетов..."
@@ -148,7 +150,7 @@ apt upgrade -y
 check_success "Обновление пакетов"
 
 log "Установка необходимых пакетов..."
-apt install -y curl wget git python3-pip python3-venv unzip nginx cron openssl net-tools socat
+apt install -y curl wget git python3-pip python3-venv unzip nginx cron openssl net-tools socat jq
 check_success "Установка зависимостей"
 
 # ==============================================
@@ -156,9 +158,9 @@ check_success "Установка зависимостей"
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}🚀 2. УСТАНОВКА XRAY${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 log "Скачивание и установка Xray..."
@@ -179,9 +181,9 @@ fi
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}🔐 3. ГЕНЕРАЦИЯ КЛЮЧЕЙ БЕЗОПАСНОСТИ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 # Генерация UUID для клиентов
@@ -199,10 +201,9 @@ SHORT_ID=$(openssl rand -hex 8)
 # Генерация случайного short ID массива
 SHORT_ID_ARRAY="[\"${SHORT_ID}\"]"
 
-echo -e "${GREEN}  ✅ Сгенерирован UUID: ${UUID}${NC}"
-echo -e "${GREEN}  ✅ Сгенерирован Private Key: ${PRIVATE_KEY}${NC}"
-echo -e "${GREEN}  ✅ Сгенерирован Public Key: ${PUBLIC_KEY}${NC}"
-echo -e "${GREEN}  ✅ Сгенерирован Short ID: ${SHORT_ID}${NC}"
+echo -e "${GREEN}  ✅ Private Key: ${PRIVATE_KEY:0:20}...${NC}"
+echo -e "${GREEN}  ✅ Public Key: ${PUBLIC_KEY:0:20}...${NC}"
+echo -e "${GREEN}  ✅ Short ID: ${SHORT_ID}${NC}"
 
 # ==============================================
 # СОЗДАНИЕ ДИРЕКТОРИЙ
@@ -221,9 +222,9 @@ check_success "Создание директорий"
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}⚙️ 4. СОЗДАНИЕ БАЗОВОЙ КОНФИГУРАЦИИ XRAY${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 cat > /usr/local/etc/xray/config.json << EOF
@@ -300,64 +301,118 @@ EOF
 check_success "Создание базовой конфигурации Xray"
 
 # ==============================================
-# СОЗДАНИЕ СКРИПТА ПАРСЕРА
+# СОЗДАНИЕ СКРИПТА ЗАГРУЗКИ КЛЮЧЕЙ (ПРОСТОЙ)
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}🔧 5. СОЗДАНИЕ СКРИПТА ПАРСЕРА КЛЮЧЕЙ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}📥 5. СОЗДАНИЕ СКРИПТА ЗАГРУЗКИ КЛЮЧЕЙ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-cat > /usr/local/bin/parse_keys.py << 'PYEOF'
+cat > /usr/local/bin/fetch_keys.py << EOF
 #!/usr/bin/env python3
 """
-Парсер VPN ключей из файла vpnnn.txt
-Сохраняет все параметры без сокращений
+Очень простой загрузчик ключей из приватного репозитория GitHub
 """
 
+import requests
+import sys
 import base64
 import json
-import re
-import urllib.parse
-import sys
-from typing import Dict, Optional, Any
 
-def parse_vless_key(key_str: str) -> Optional[Dict[str, Any]]:
+# Данные для доступа
+GITHUB_USER = "${GITHUB_USER}"
+REPO_NAME = "${REPO_NAME}"
+KEYS_FILE = "${KEYS_FILE}"
+GITHUB_TOKEN = "${GITHUB_TOKEN}"
+
+def fetch_keys():
+    """Загружает файл с ключами"""
+    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/{KEYS_FILE}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    
+    try:
+        print(f"Загрузка {KEYS_FILE} из {GITHUB_USER}/{REPO_NAME}...", file=sys.stderr)
+        
+        response = requests.get(url, headers=headers, timeout=30)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Декодируем из base64
+            if 'content' in data:
+                content = base64.b64decode(data['content']).decode('utf-8')
+                print(content, end='')
+                print(f"✅ Успешно загружено {len(content.splitlines())} строк", file=sys.stderr)
+                return True
+            else:
+                print("❌ Неверный формат ответа", file=sys.stderr)
+        else:
+            print(f"❌ Ошибка HTTP {response.status_code}", file=sys.stderr)
+            print(response.text, file=sys.stderr)
+            
+    except Exception as e:
+        print(f"❌ Ошибка: {e}", file=sys.stderr)
+    
+    return False
+
+if __name__ == "__main__":
+    if not fetch_keys():
+        sys.exit(1)
+EOF
+
+chmod +x /usr/local/bin/fetch_keys.py
+check_success "Создание скрипта загрузки ключей"
+
+# ==============================================
+# СОЗДАНИЕ СКРИПТА ПАРСЕРА (МАКСИМАЛЬНО ПРОСТОЙ)
+# ==============================================
+
+echo ""
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🔧 6. СОЗДАНИЕ СКРИПТА ПАРСЕРА КЛЮЧЕЙ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+cat > /usr/local/bin/parse_keys.py << 'EOF'
+#!/usr/bin/env python3
+"""
+Максимально простой парсер VLESS ключей
+Без сложностей, без интерактива, только построчный парсинг
+"""
+
+import sys
+import json
+import urllib.parse
+
+def parse_vless_key(line):
     """
-    Парсит VLESS ключ БЕЗ СОКРАЩЕНИЙ, сохраняя все параметры
+    Парсит VLESS ключ максимально просто
     Формат: vless://uuid@host:port?params#name
     """
     try:
-        if not key_str.startswith('vless://'):
+        line = line.strip()
+        if not line.startswith('vless://'):
             return None
         
-        # Сохраняем оригинальный ключ полностью
-        original_key = key_str.strip()
-        
-        # Извлекаем имя из комментария если есть
-        name = ''
-        comment = ''
-        if '#' in original_key:
-            base_key, comment = original_key.split('#', 1)
-            name = urllib.parse.unquote(comment)
-        else:
-            base_key = original_key
-        
         # Убираем vless://
-        content = base_key[8:]
+        content = line[8:]
         
-        # Разделяем на основную часть и параметры
-        params = {}
-        auth_part = content
-        
+        # Отделяем параметры от основной части
+        params_part = ''
         if '?' in content:
-            auth_part, params_str = content.split('?', 1)
-            # Парсим параметры
-            for param in params_str.split('&'):
-                if '=' in param:
-                    k, v = param.split('=', 1)
-                    params[k] = v
+            auth_part, params_part = content.split('?', 1)
+        else:
+            auth_part = content
+        
+        # Отделяем имя (комментарий)
+        name = ''
+        if '#' in line:
+            full_line, name = line.split('#', 1)
         
         # Парсим uuid@host:port
         if '@' not in auth_part:
@@ -368,338 +423,92 @@ def parse_vless_key(key_str: str) -> Optional[Dict[str, Any]]:
         # Парсим host:port
         if ':' in host_port:
             host, port_str = host_port.split(':', 1)
+            # Обрезаем всё лишнее после порта
+            port_str = port_str.split('?')[0].split('#')[0]
             try:
                 port = int(port_str)
-            except ValueError:
+            except:
                 port = 443
         else:
             host = host_port
             port = 443
         
-        # Извлекаем дополнительные параметры из комментария если нужно
-        # Некоторые ключи хранят параметры в комментарии
-        if comment and not params:
-            # Пытаемся найти параметры в комментарии
-            for part in comment.split():
-                if '=' in part:
-                    k, v = part.split('=', 1)
+        # Парсим параметры
+        params = {}
+        if params_part:
+            # Обрезаем имя если есть
+            params_part = params_part.split('#')[0]
+            for param in params_part.split('&'):
+                if '=' in param:
+                    k, v = param.split('=', 1)
                     params[k] = v
         
+        # Формируем результат
         result = {
             'type': 'vless',
             'uuid': uuid,
             'host': host,
             'port': port,
             'name': name,
-            'comment': comment,
             'params': params,
-            'full_key': original_key,
-            'protocol': 'vless'
+            'full_key': line
         }
         
         return result
         
     except Exception as e:
-        print(f"Error parsing VLESS key: {e}", file=sys.stderr)
+        # В случае ошибки просто пропускаем
+        sys.stderr.write(f"Error parsing line: {e}\n")
         return None
-
-def parse_ss_key(key_str: str) -> Optional[Dict[str, Any]]:
-    """
-    Парсит Shadowsocks ключ
-    Формат: ss://method:password@host:port#name
-    """
-    try:
-        if not key_str.startswith('ss://'):
-            return None
-        
-        original_key = key_str.strip()
-        
-        # Извлекаем имя из комментария
-        name = ''
-        if '#' in original_key:
-            base_key, name = original_key.split('#', 1)
-            name = urllib.parse.unquote(name)
-        else:
-            base_key = original_key
-        
-        content = base_key[5:]
-        
-        # Пробуем разные форматы SS ключей
-        host = None
-        port = None
-        
-        # Формат с @
-        if '@' in content:
-            method_pass, host_port = content.split('@', 1)
-            if ':' in method_pass:
-                method, password = method_pass.split(':', 1)
-            else:
-                # Возможно base64
-                try:
-                    decoded = base64.b64decode(method_pass).decode('utf-8')
-                    if ':' in decoded:
-                        method, password = decoded.split(':', 1)
-                    else:
-                        method, password = 'chacha20-ietf-poly1305', method_pass
-                except:
-                    method, password = 'chacha20-ietf-poly1305', method_pass
-            
-            if ':' in host_port:
-                host, port_str = host_port.split(':', 1)
-                port = int(port_str)
-        
-        # Формат с base64
-        elif not content.startswith('ss://'):
-            try:
-                decoded = base64.b64decode(content).decode('utf-8')
-                if '@' in decoded:
-                    method_pass, host_port = decoded.split('@', 1)
-                    if ':' in method_pass:
-                        method, password = method_pass.split(':', 1)
-                    if ':' in host_port:
-                        host, port_str = host_port.split(':', 1)
-                        port = int(port_str)
-            except:
-                pass
-        
-        if host and port:
-            return {
-                'type': 'ss',
-                'method': method,
-                'password': password,
-                'host': host,
-                'port': port,
-                'name': name,
-                'full_key': original_key,
-                'protocol': 'ss'
-            }
-        
-        # Если не удалось распарсить, возвращаем базовую информацию
-        return {
-            'type': 'ss',
-            'full_key': original_key,
-            'name': name,
-            'protocol': 'ss'
-        }
-        
-    except Exception as e:
-        print(f"Error parsing SS key: {e}", file=sys.stderr)
-        return None
-
-def parse_any_key(key_str: str) -> Optional[Dict[str, Any]]:
-    """
-    Парсит любой ключ (VLESS, SS, и т.д.)
-    """
-    key_str = key_str.strip()
-    
-    if not key_str or key_str.startswith('#'):
-        return None
-    
-    if key_str.startswith('vless://'):
-        return parse_vless_key(key_str)
-    elif key_str.startswith('ss://'):
-        return parse_ss_key(key_str)
-    elif key_str.startswith('trojan://'):
-        # Для Trojan ключей
-        return {
-            'type': 'trojan',
-            'full_key': key_str,
-            'protocol': 'trojan'
-        }
-    else:
-        # Для неизвестных ключей
-        return {
-            'type': 'unknown',
-            'full_key': key_str,
-            'protocol': 'unknown'
-        }
-
-def extract_host_from_key(key_dict: Dict) -> Optional[str]:
-    """Извлекает хост из распарсенного ключа"""
-    if 'host' in key_dict:
-        return key_dict['host']
-    
-    # Пытаемся извлечь из full_key
-    full_key = key_dict.get('full_key', '')
-    if '@' in full_key:
-        try:
-            host_part = full_key.split('@')[1]
-            if ':' in host_part:
-                return host_part.split(':')[0]
-            elif '?' in host_part:
-                return host_part.split('?')[0]
-            else:
-                return host_part
-        except:
-            pass
-    
-    return None
 
 def main():
-    """Основная функция для тестирования"""
-    import sys
-    
-    print("VPN Key Parser v2.0")
-    print("=" * 50)
-    
-    if not sys.stdin.isatty():
-        # Читаем из stdin
-        for line in sys.stdin:
-            line = line.strip()
-            if line:
-                parsed = parse_any_key(line)
-                if parsed:
-                    print(json.dumps(parsed, ensure_ascii=False, indent=2))
-    else:
-        # Интерактивный режим
-        print("Введите ключи (по одному в строке, Ctrl+D для завершения):")
-        for line in sys.stdin:
-            line = line.strip()
-            if line:
-                parsed = parse_any_key(line)
-                if parsed:
-                    print(json.dumps(parsed, ensure_ascii=False, indent=2))
-                else:
-                    print(f"Не удалось распарсить: {line}")
+    """Читает строки из stdin и выводит JSON в stdout"""
+    for line in sys.stdin:
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+            
+        parsed = parse_vless_key(line)
+        if parsed:
+            # Выводим только JSON, ничего лишнего
+            print(json.dumps(parsed, ensure_ascii=False))
+            sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
-PYEOF
+EOF
 
 chmod +x /usr/local/bin/parse_keys.py
 check_success "Создание скрипта парсера"
 
 # ==============================================
-# СОЗДАНИЕ СКРИПТА ЗАГРУЗКИ КЛЮЧЕЙ
+# ТЕСТИРОВАНИЕ ПАРСЕРА
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}📥 6. СОЗДАНИЕ СКРИПТА ЗАГРУЗКИ КЛЮЧЕЙ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🧪 7. ТЕСТИРОВАНИЕ ПАРСЕРА${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-cat > /usr/local/bin/fetch_keys.py << PYEOF
-#!/usr/bin/env python3
-"""
-Скрипт для загрузки ключей из приватного репозитория GitHub
-Использует Personal Access Token для аутентификации
-"""
+log "Тестирование парсера на примере ключа..."
+echo "vless://5d86335c-a27c-4b04-900d-e360971f80ad@185.189.46.63:443?encryption=none&type=grpc&mode=gun&security=reality&fp=chrome&sni=swe.denditop.site&pbk=HZiMehwH6sQf4bDkLiXJ0KslpYqz0mNFwBr34-e6RRM&sid=9c2378562188c3cb&spx=/#🇸🇪 Базовый 80мс [xankaVPN]" | /usr/bin/python3 /usr/local/bin/parse_keys.py | jq .
 
-import requests
-import json
-import sys
-import os
-import base64
-from urllib.parse import urlparse
-from typing import Optional
-
-# Данные для доступа к репозиторию (заполняются при установке)
-GITHUB_USER = "${GITHUB_USER}"
-REPO_NAME = "${REPO_NAME}"
-KEYS_FILE = "${KEYS_FILE}"
-GITHUB_TOKEN = "${GITHUB_TOKEN}"
-
-def fetch_private_file() -> Optional[str]:
-    """
-    Загружает файл из приватного репозитория GitHub
-    
-    Returns:
-        Содержимое файла или None в случае ошибки
-    """
-    # GitHub API URL для получения содержимого файла
-    url = f"https://api.github.com/repos/{GITHUB_USER}/{REPO_NAME}/contents/{KEYS_FILE}"
-    
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3.raw"  # Получаем сырое содержимое
-    }
-    
-    try:
-        print(f"Загрузка файла: {KEYS_FILE} из {GITHUB_USER}/{REPO_NAME}", file=sys.stderr)
-        
-        response = requests.get(url, headers=headers, timeout=30)
-        response.raise_for_status()
-        
-        # Проверяем тип ответа
-        content_type = response.headers.get('Content-Type', '')
-        
-        if 'application/json' in content_type:
-            # Если получили JSON, значит файл закодирован в base64
-            data = response.json()
-            if 'content' in data:
-                # Декодируем из base64
-                content = base64.b64decode(data['content']).decode('utf-8')
-                print(f"Файл загружен (base64), размер: {len(content)} символов", file=sys.stderr)
-                return content
-        else:
-            # Получили сырое содержимое
-            content = response.text
-            print(f"Файл загружен (raw), размер: {len(content)} символов", file=sys.stderr)
-            return content
-            
-    except requests.exceptions.HTTPError as e:
-        if response.status_code == 404:
-            print(f"Ошибка: Файл {KEYS_FILE} не найден в репозитории", file=sys.stderr)
-        elif response.status_code == 401:
-            print("Ошибка: Неверный токен или нет доступа", file=sys.stderr)
-        elif response.status_code == 403:
-            print("Ошибка: Доступ запрещен (возможно, превышен лимит запросов)", file=sys.stderr)
-        else:
-            print(f"HTTP ошибка {response.status_code}: {e}", file=sys.stderr)
-            
-    except requests.exceptions.ConnectionError:
-        print("Ошибка: Нет соединения с GitHub", file=sys.stderr)
-        
-    except requests.exceptions.Timeout:
-        print("Ошибка: Таймаут при соединении с GitHub", file=sys.stderr)
-        
-    except Exception as e:
-        print(f"Неожиданная ошибка: {e}", file=sys.stderr)
-    
-    return None
-
-def test_connection() -> bool:
-    """Тестирует соединение с GitHub API"""
-    try:
-        url = "https://api.github.com"
-        response = requests.get(url, timeout=10)
-        return response.status_code == 200
-    except:
-        return False
-
-def main():
-    """Основная функция"""
-    # Проверяем соединение с GitHub
-    if not test_connection():
-        print("Ошибка: Нет доступа к GitHub API", file=sys.stderr)
-        return 1
-    
-    content = fetch_private_file()
-    
-    if content:
-        # Выводим содержимое в stdout для использования в других скриптах
-        print(content, end='')
-        return 0
-    else:
-        print("Не удалось загрузить файл", file=sys.stderr)
-        return 1
-
-if __name__ == "__main__":
-    sys.exit(main())
-PYEOF
-
-chmod +x /usr/local/bin/fetch_keys.py
-check_success "Создание скрипта загрузки ключей"
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ Парсер работает корректно${NC}"
+else
+    echo -e "${RED}❌ Парсер не работает${NC}"
+    exit 1
+fi
 
 # ==============================================
 # ТЕСТОВАЯ ЗАГРУЗКА КЛЮЧЕЙ
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}🔍 7. ТЕСТОВАЯ ЗАГРУЗКА КЛЮЧЕЙ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}📤 8. ТЕСТОВАЯ ЗАГРУЗКА КЛЮЧЕЙ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 log "Пробная загрузка ключей из репозитория..."
@@ -715,10 +524,6 @@ if [ -s /tmp/test_keys.txt ]; then
     echo ""
 else
     echo -e "${RED}❌ Не удалось загрузить ключи${NC}"
-    echo "Проверьте:"
-    echo "  - Правильность токена"
-    echo "  - Существование файла ${KEYS_FILE}"
-    echo "  - Доступ к репозиторию"
     exit 1
 fi
 
@@ -727,16 +532,16 @@ fi
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}🔄 8. СОЗДАНИЕ СКРИПТА ОБНОВЛЕНИЯ СЕРВЕРОВ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🔄 9. СОЗДАНИЕ СКРИПТА ОБНОВЛЕНИЯ СЕРВЕРОВ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-cat > /usr/local/bin/update_servers.py << 'PYEOF'
+cat > /usr/local/bin/update_servers.py << 'EOF'
 #!/usr/bin/env python3
 """
-Основной скрипт обновления конфигурации Xray
-Загружает ключи из GitHub и обновляет список серверов для балансировки
+Простой скрипт обновления конфигурации Xray
+Без сложных зависимостей, с таймаутами
 """
 
 import json
@@ -744,255 +549,160 @@ import subprocess
 import sys
 import os
 import time
-import re
 from datetime import datetime
-from typing import List, Dict, Any, Optional
-import traceback
 
 # Константы
 CONFIG_PATH = "/usr/local/etc/xray/config.json"
 BACKUP_PATH = "/usr/local/etc/xray/config_backup.json"
 LOG_PATH = "/var/log/vpn-balancer.log"
-PARSE_SCRIPT = "/usr/local/bin/parse_keys.py"
-FETCH_SCRIPT = "/usr/local/bin/fetch_keys.py"
 
-def log_message(msg: str):
-    """
-    Записывает сообщение в лог-файл и выводит в консоль
-    
-    Args:
-        msg: Сообщение для записи
-    """
+def log_message(msg):
+    """Запись в лог"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     log_entry = f"[{timestamp}] {msg}"
     
-    # Запись в файл
     try:
         with open(LOG_PATH, 'a', encoding='utf-8') as f:
             f.write(log_entry + '\n')
-    except Exception as e:
-        print(f"Ошибка записи в лог: {e}")
+    except:
+        pass
     
-    # Вывод в консоль
     print(log_entry)
 
-def run_script(script_path: str, args: List[str] = None) -> Optional[str]:
-    """
-    Запускает внешний Python скрипт и возвращает его вывод
-    
-    Args:
-        script_path: Путь к скрипту
-        args: Аргументы командной строки
-        
-    Returns:
-        Вывод скрипта или None в случае ошибки
-    """
+def run_command(cmd, timeout=10):
+    """Запуск команды с таймаутом"""
     try:
-        cmd = [sys.executable, script_path]
-        if args:
-            cmd.extend(args)
-        
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        
-        if result.returncode == 0:
-            return result.stdout
-        else:
-            log_message(f"Ошибка выполнения {script_path}: {result.stderr}")
-            return None
-            
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=timeout
+        )
+        return result.returncode == 0, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
-        log_message(f"Таймаут при выполнении {script_path}")
-        return None
+        return False, "", "Timeout expired"
     except Exception as e:
-        log_message(f"Ошибка запуска {script_path}: {e}")
-        return None
+        return False, "", str(e)
 
-def fetch_servers_from_github() -> Optional[str]:
-    """
-    Загружает содержимое файла с ключами из GitHub
+def fetch_keys():
+    """Загружает ключи из GitHub"""
+    log_message("Загрузка ключей из репозитория...")
     
-    Returns:
-        Содержимое файла или None
-    """
-    log_message("Загрузка ключей из приватного репозитория GitHub...")
+    success, stdout, stderr = run_command(['/usr/bin/python3', '/usr/local/bin/fetch_keys.py'], timeout=30)
     
-    content = run_script(FETCH_SCRIPT)
-    
-    if content:
-        log_message(f"✅ Загружено {len(content.splitlines())} строк")
-        return content
+    if success and stdout:
+        log_message(f"✅ Загружено {len(stdout.splitlines())} строк")
+        return stdout
     else:
-        log_message("❌ Не удалось загрузить ключи из GitHub")
+        log_message(f"❌ Ошибка загрузки: {stderr}")
         return None
 
-def parse_keys_from_content(content: str) -> List[Dict[str, Any]]:
-    """
-    Парсит ключи из текстового содержимого
-    
-    Args:
-        content: Текстовое содержимое файла с ключами
-        
-    Returns:
-        Список распарсенных ключей
-    """
+def parse_keys(content):
+    """Парсит ключи построчно"""
     servers = []
-    vless_servers = []
+    lines = content.split('\n')
     
-    lines = content.splitlines()
+    log_message(f"Парсинг {len(lines)} строк...")
     
     for line_num, line in enumerate(lines, 1):
         line = line.strip()
-        
-        # Пропускаем пустые строки и комментарии
         if not line or line.startswith('#'):
             continue
         
-        # Парсим ключ с помощью внешнего скрипта
-        import tempfile
-        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False) as f:
-            f.write(line)
-            tmp_file = f.name
-        
+        # Парсим через внешний скрипт
         try:
-            parsed_json = run_script(PARSE_SCRIPT, [tmp_file])
-            if parsed_json:
+            proc = subprocess.run(
+                ['/usr/bin/python3', '/usr/local/bin/parse_keys.py'],
+                input=line,
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if proc.returncode == 0 and proc.stdout:
                 try:
-                    parsed = json.loads(parsed_json.strip())
-                    servers.append(parsed)
-                    
-                    # Отдельно собираем VLESS серверы
-                    if parsed.get('type') == 'vless' or line.startswith('vless://'):
-                        vless_servers.append(parsed)
+                    parsed = json.loads(proc.stdout.strip())
+                    if parsed.get('type') == 'vless':
+                        servers.append(parsed)
+                        log_message(f"  ✅ {parsed['host']}:{parsed['port']}")
                 except json.JSONDecodeError:
                     pass
-        finally:
-            os.unlink(tmp_file)
+        except subprocess.TimeoutExpired:
+            log_message(f"  ⚠️ Таймаут на строке {line_num}")
+            continue
     
-    log_message(f"✅ Всего ключей: {len(servers)}")
-    log_message(f"✅ VLESS ключей: {len(vless_servers)}")
-    
-    return vless_servers
+    log_message(f"✅ Найдено VLESS серверов: {len(servers)}")
+    return servers
 
-def create_outbound_for_server(server: Dict[str, Any], index: int) -> Dict[str, Any]:
-    """
-    Создает outbound конфигурацию для сервера
-    
-    Args:
-        server: Распарсенный сервер
-        index: Индекс сервера для тега
-        
-    Returns:
-        Конфигурация outbound для Xray
-    """
-    # Базовые настройки
-    streamSettings = {
-        "network": "tcp",
-        "security": "reality"
-    }
-    
-    # Настройки Reality
-    realitySettings = {
-        "serverName": "www.microsoft.com",
-        "fingerprint": "chrome",
-        "publicKey": "",
-        "shortId": "6ba85179e30d4fc2"
-    }
-    
-    # Если есть параметры в ключе, используем их
+def create_outbound(server, index):
+    """Создает outbound для сервера"""
     params = server.get('params', {})
     
-    if 'sni' in params:
-        realitySettings['serverName'] = params['sni']
-    if 'fp' in params:
-        realitySettings['fingerprint'] = params['fp']
-    if 'pbk' in params:
-        realitySettings['publicKey'] = params['pbk']
-    if 'sid' in params:
-        realitySettings['shortId'] = params['sid']
+    # Базовые настройки Reality
+    reality_settings = {
+        "serverName": params.get('sni', 'www.microsoft.com'),
+        "fingerprint": params.get('fp', 'chrome'),
+        "publicKey": params.get('pbk', ''),
+        "shortId": params.get('sid', '6ba85179e30d4fc2')
+    }
+    
     if 'spx' in params:
-        realitySettings['spiderX'] = params['spx']
+        reality_settings['spiderX'] = params['spx']
     
-    streamSettings['realitySettings'] = realitySettings
+    stream_settings = {
+        "network": params.get('type', 'tcp'),
+        "security": params.get('security', 'reality'),
+        "realitySettings": reality_settings
+    }
     
-    # Настройки gRPC если есть
+    # Для gRPC
     if params.get('type') == 'grpc':
-        streamSettings['network'] = 'grpc'
-        streamSettings['grpcSettings'] = {
+        stream_settings['grpcSettings'] = {
             "serviceName": params.get('serviceName', ''),
             "mode": params.get('mode', 'gun')
         }
     
-    # Определяем flow
-    flow = params.get('flow', 'xtls-rprx-vision')
-    
-    outbound = {
+    return {
         "protocol": "vless",
         "tag": f"vpn-server-{index}",
         "settings": {
-            "vnext": [
-                {
-                    "address": server['host'],
-                    "port": server.get('port', 443),
-                    "users": [
-                        {
-                            "id": server['uuid'],
-                            "flow": flow,
-                            "encryption": params.get('encryption', 'none')
-                        }
-                    ]
-                }
-            ]
+            "vnext": [{
+                "address": server['host'],
+                "port": server.get('port', 443),
+                "users": [{
+                    "id": server['uuid'],
+                    "flow": params.get('flow', 'xtls-rprx-vision'),
+                    "encryption": params.get('encryption', 'none')
+                }]
+            }]
         },
-        "streamSettings": streamSettings
+        "streamSettings": stream_settings
     }
-    
-    return outbound
 
-def update_xray_config(servers: List[Dict[str, Any]]) -> bool:
-    """
-    Обновляет конфигурацию Xray с новыми серверами
-    
-    Args:
-        servers: Список серверов для добавления
-        
-    Returns:
-        True в случае успеха, False при ошибке
-    """
+def update_config(servers):
+    """Обновляет конфигурацию Xray"""
     try:
-        log_message("Обновление конфигурации Xray...")
-        
         # Читаем текущую конфигурацию
         with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
             config = json.load(f)
         
-        # Создаем outbounds для каждого сервера
+        # Создаем outbounds
         outbounds = []
         
         for i, server in enumerate(servers):
-            outbound = create_outbound_for_server(server, i)
+            outbound = create_outbound(server, i)
             outbounds.append(outbound)
-            log_message(f"  Добавлен сервер {i+1}: {server['host']}:{server.get('port', 443)}")
+            log_message(f"  ➕ Добавлен: {server['host']}:{server.get('port', 443)}")
         
-        # Добавляем стандартные outbounds
-        outbounds.append({
-            "protocol": "freedom",
-            "tag": "direct"
-        })
+        # Добавляем стандартные
+        outbounds.append({"protocol": "freedom", "tag": "direct"})
+        outbounds.append({"protocol": "blackhole", "tag": "block"})
         
-        outbounds.append({
-            "protocol": "blackhole",
-            "tag": "block"
-        })
-        
-        # Обновляем конфигурацию
         config['outbounds'] = outbounds
         
-        # Обновляем selector для балансировщика
+        # Обновляем балансировщик
         if 'routing' not in config:
-            config['routing'] = {
-                "balancers": [],
-                "rules": []
-            }
+            config['routing'] = {"balancers": [], "rules": []}
         
         if 'balancers' not in config['routing']:
             config['routing']['balancers'] = []
@@ -1009,122 +719,82 @@ def update_xray_config(servers: List[Dict[str, Any]]) -> bool:
             config['routing']['balancers'].append({
                 "tag": "vpn-servers",
                 "selector": [f"vpn-server-{i}" for i in range(len(servers))],
-                "strategy": {
-                    "type": "leastPing"
-                }
+                "strategy": {"type": "leastPing"}
             })
         
-        # Создаем резервную копию
+        # Сохраняем резервную копию
         if os.path.exists(CONFIG_PATH):
             import shutil
             shutil.copy2(CONFIG_PATH, BACKUP_PATH)
-            log_message(f"Создана резервная копия: {BACKUP_PATH}")
         
         # Сохраняем новую конфигурацию
         with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
             json.dump(config, f, indent=2, ensure_ascii=False)
         
-        log_message(f"✅ Конфигурация обновлена: {len(servers)} серверов добавлено")
+        log_message(f"✅ Конфигурация обновлена: {len(servers)} серверов")
         return True
         
     except Exception as e:
-        log_message(f"❌ Ошибка обновления конфигурации: {e}")
-        traceback.print_exc()
+        log_message(f"❌ Ошибка: {e}")
         return False
 
-def reload_xray() -> bool:
-    """
-    Перезагружает Xray с новой конфигурацией
+def reload_xray():
+    """Перезагружает Xray"""
+    log_message("Перезагрузка Xray...")
     
-    Returns:
-        True в случае успеха, False при ошибке
-    """
-    try:
-        log_message("Перезагрузка Xray...")
-        
-        # Проверяем конфигурацию
-        check_result = subprocess.run(
-            ['/usr/local/bin/xray', 'check', '-config', CONFIG_PATH],
-            capture_output=True, text=True
-        )
-        
-        if check_result.returncode != 0:
-            log_message(f"❌ Ошибка в конфигурации: {check_result.stderr}")
-            
-            # Восстанавливаем из резервной копии если есть
-            if os.path.exists(BACKUP_PATH):
-                log_message("Восстановление из резервной копии...")
-                import shutil
-                shutil.copy2(BACKUP_PATH, CONFIG_PATH)
-                log_message("✅ Конфигурация восстановлена")
-            return False
-        
-        # Перезапускаем Xray
-        restart_result = subprocess.run(
-            ['systemctl', 'restart', 'xray'],
-            capture_output=True, text=True
-        )
-        
-        if restart_result.returncode != 0:
-            log_message(f"❌ Ошибка перезапуска Xray: {restart_result.stderr}")
-            return False
-        
-        # Даем время на запуск
-        time.sleep(3)
-        
-        # Проверяем статус
-        status_result = subprocess.run(
-            ['systemctl', 'is-active', 'xray'],
-            capture_output=True, text=True
-        )
-        
-        if status_result.stdout.strip() == 'active':
-            log_message("✅ Xray успешно перезагружен и работает")
-            return True
-        else:
-            log_message(f"❌ Xray не активен: {status_result.stdout}")
-            return False
-        
-    except Exception as e:
-        log_message(f"❌ Ошибка перезагрузки Xray: {e}")
+    # Проверяем конфигурацию
+    success, stdout, stderr = run_command(['/usr/local/bin/xray', 'check', '-config', CONFIG_PATH])
+    
+    if not success:
+        log_message(f"❌ Ошибка в конфигурации: {stderr}")
+        # Восстанавливаем из резервной копии
+        if os.path.exists(BACKUP_PATH):
+            import shutil
+            shutil.copy2(BACKUP_PATH, CONFIG_PATH)
+            log_message("✅ Конфигурация восстановлена из резервной копии")
         return False
+    
+    # Перезапускаем Xray
+    success, _, stderr = run_command(['systemctl', 'restart', 'xray'])
+    
+    if success:
+        time.sleep(2)
+        success, stdout, _ = run_command(['systemctl', 'is-active', 'xray'])
+        if success and 'active' in stdout:
+            log_message("✅ Xray успешно перезагружен")
+            return True
+    
+    log_message(f"❌ Ошибка перезагрузки: {stderr}")
+    return False
 
 def main():
     """Основная функция"""
     log_message("=" * 60)
-    log_message("🔄 НАЧАЛО ОБНОВЛЕНИЯ СЕРВЕРОВ")
+    log_message("🔄 НАЧАЛО ОБНОВЛЕНИЯ")
     
-    # Загружаем ключи из GitHub
-    content = fetch_servers_from_github()
-    
+    # Загружаем ключи
+    content = fetch_keys()
     if not content:
-        log_message("❌ Не удалось загрузить ключи")
+        log_message("❌ Нет данных для обработки")
         return 1
     
     # Парсим ключи
-    servers = parse_keys_from_content(content)
+    servers = parse_keys(content)
     
     if len(servers) == 0:
-        log_message("⚠️ Нет VLESS серверов для добавления")
+        log_message("⚠️ Нет VLESS серверов")
         return 0
     
     # Обновляем конфигурацию
-    if update_xray_config(servers):
-        # Перезагружаем Xray
-        if reload_xray():
-            log_message("✅ Обновление завершено успешно")
-        else:
-            log_message("⚠️ Конфигурация обновлена, но Xray не перезагружен")
-    else:
-        log_message("❌ Ошибка обновления конфигурации")
-        return 1
+    if update_config(servers):
+        reload_xray()
     
     log_message("🏁 ЗАВЕРШЕНО")
     return 0
 
 if __name__ == "__main__":
     sys.exit(main())
-PYEOF
+EOF
 
 chmod +x /usr/local/bin/update_servers.py
 check_success "Создание скрипта обновления"
@@ -1134,22 +804,28 @@ check_success "Создание скрипта обновления"
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}🧪 9. ТЕСТОВЫЙ ЗАПУСК ОБНОВЛЕНИЯ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🧪 10. ТЕСТОВЫЙ ЗАПУСК ОБНОВЛЕНИЯ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 log "Запуск скрипта обновления..."
 /usr/bin/python3 /usr/local/bin/update_servers.py
+
+if [ $? -eq 0 ]; then
+    echo -e "${GREEN}✅ Скрипт обновления выполнен успешно${NC}"
+else
+    echo -e "${RED}❌ Ошибка при выполнении скрипта обновления${NC}"
+fi
 
 # ==============================================
 # СОЗДАНИЕ CRON ДЛЯ АВТО-ОБНОВЛЕНИЯ
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}⏰ 10. НАСТРОЙКА АВТОМАТИЧЕСКОГО ОБНОВЛЕНИЯ${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}⏰ 11. НАСТРОЙКА АВТОМАТИЧЕСКОГО ОБНОВЛЕНИЯ${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 cat > /etc/cron.d/vpn-balancer << EOF
@@ -1158,361 +834,23 @@ cat > /etc/cron.d/vpn-balancer << EOF
 
 # Очистка старых логов каждый день в 2:00
 0 2 * * * root find /var/log/vpn-balancer* -type f -mtime +7 -delete
+0 2 * * * root find /var/log/xray/*.log -type f -mtime +7 -delete
 EOF
 
 chmod 644 /etc/cron.d/vpn-balancer
 check_success "Настройка cron"
 
 # ==============================================
-# СОЗДАНИЕ SYSTEMD ТАЙМЕРА
+# ЗАПУСК XRAY
 # ==============================================
 
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}⏲️ 11. СОЗДАНИЕ SYSTEMD ТАЙМЕРА${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}🚀 12. ЗАПУСК XRAY${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-cat > /etc/systemd/system/vpn-balancer.service << EOF
-[Unit]
-Description=VPN Balancer Auto-Updater
-Description=Обновление списка серверов VPN балансировщика
-After=network.target xray.service
-Wants=xray.service
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/python3 /usr/local/bin/update_servers.py
-User=root
-Group=root
-StandardOutput=journal
-StandardError=journal
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-cat > /etc/systemd/system/vpn-balancer.timer << EOF
-[Unit]
-Description=Timer for VPN Balancer Auto-Updater
-Description=Таймер для автоматического обновления серверов VPN
-Requires=vpn-balancer.service
-
-[Timer]
-OnCalendar=*:0/5
-Persistent=true
-RandomizedDelaySec=10
-
-[Install]
-WantedBy=timers.target
-EOF
-
-systemctl daemon-reload
-systemctl enable vpn-balancer.timer
-systemctl start vpn-balancer.timer
 systemctl enable xray
-systemctl restart xray
-
-check_success "Настройка systemd таймера"
-
-# ==============================================
-# СОЗДАНИЕ СКРИПТА МОНИТОРИНГА
-# ==============================================
-
-echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}📊 12. СОЗДАНИЕ СКРИПТА МОНИТОРИНГА${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-cat > /usr/local/bin/balancer-status << 'EOF'
-#!/bin/bash
-
-# Цвета для вывода
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m'
-
-echo -e "${BLUE}"
-echo '╔══════════════════════════════════════════════════════════════════╗'
-echo '║              VPN БАЛАНСИРОВЩИК - СТАТУС СИСТЕМЫ                  ║'
-echo '╚══════════════════════════════════════════════════════════════════╝'
-echo -e "${NC}"
-echo ""
-
-# Функция для получения информации о системе
-get_system_info() {
-    echo -e "${YELLOW}📌 ИНФОРМАЦИЯ О СИСТЕМЕ:${NC}"
-    echo "   • Хост: $(hostname)"
-    echo "   • IP: $(curl -s ifconfig.me)"
-    echo "   • Время: $(date '+%Y-%m-%d %H:%M:%S')"
-    echo "   • Uptime: $(uptime -p)"
-    echo "   • Load: $(uptime | awk -F'load average:' '{print $2}')"
-    echo ""
-}
-
-# Функция для проверки статуса Xray
-check_xray_status() {
-    echo -e "${YELLOW}🚀 СТАТУС XRAY:${NC}"
-    
-    if systemctl is-active --quiet xray; then
-        echo -e "   • Статус: ${GREEN}Активен${NC}"
-    else
-        echo -e "   • Статус: ${RED}Не активен${NC}"
-    fi
-    
-    XRAY_VERSION=$(xray version 2>/dev/null | head -1)
-    echo "   • Версия: $XRAY_VERSION"
-    
-    XRAY_PID=$(pgrep xray)
-    if [ ! -z "$XRAY_PID" ]; then
-        echo "   • PID: $XRAY_PID"
-        echo "   • Память: $(ps -o rss= -p $XRAY_PID | awk '{printf "%.2f MB", $1/1024}')"
-    fi
-    
-    # Проверка порта
-    if ss -tlnp | grep -q ":${XRAY_PORT:-443}"; then
-        echo -e "   • Порт ${XRAY_PORT:-443}: ${GREEN}Слушается${NC}"
-    else
-        echo -e "   • Порт ${XRAY_PORT:-443}: ${RED}Не слушается${NC}"
-    fi
-    echo ""
-}
-
-# Функция для проверки статуса обновлений
-check_update_status() {
-    echo -e "${YELLOW}🔄 СТАТУС АВТО-ОБНОВЛЕНИЯ:${NC}"
-    
-    if systemctl is-active --quiet vpn-balancer.timer; then
-        echo -e "   • Таймер: ${GREEN}Активен${NC}"
-        TIMER_STATUS=$(systemctl status vpn-balancer.timer --no-pager | grep "Trigger:" | head -1)
-        echo "   • $TIMER_STATUS"
-    else
-        echo -e "   • Таймер: ${RED}Не активен${NC}"
-    fi
-    
-    if [ -f /etc/cron.d/vpn-balancer ]; then
-        echo -e "   • Cron: ${GREEN}Настроен${NC}"
-    else
-        echo -e "   • Cron: ${RED}Не настроен${NC}"
-    fi
-    echo ""
-}
-
-# Функция для просмотра последних логов
-check_logs() {
-    echo -e "${YELLOW}📋 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ:${NC}"
-    
-    if [ -f /var/log/vpn-balancer.log ]; then
-        echo "   Последние 5 записей:"
-        tail -5 /var/log/vpn-balancer.log | sed 's/^/   /'
-    else
-        echo "   ❌ Лог-файл не найден"
-    fi
-    echo ""
-}
-
-# Функция для отображения загруженных серверов
-show_servers() {
-    echo -e "${YELLOW}🌍 ЗАГРУЖЕННЫЕ СЕРВЕРА (VLESS):${NC}"
-    
-    if [ -f /usr/local/etc/xray/config.json ]; then
-        python3 -c "
-import json
-try:
-    with open('/usr/local/etc/xray/config.json') as f:
-        config = json.load(f)
-    
-    servers = []
-    for outbound in config.get('outbounds', []):
-        if outbound['tag'].startswith('vpn-server-'):
-            settings = outbound['settings']['vnext'][0]
-            servers.append({
-                'tag': outbound['tag'],
-                'address': settings['address'],
-                'port': settings['port']
-            })
-    
-    if servers:
-        print('   {:<5} {:<30} {:<10}'.format('№', 'ХОСТ', 'ПОРТ'))
-        print('   ' + '-' * 50)
-        for i, s in enumerate(servers, 1):
-            print('   {:<5} {:<30} {:<10}'.format(i, s['address'], s['port']))
-    else:
-        print('   ❌ Нет загруженных серверов')
-        
-except Exception as e:
-    print(f'   ❌ Ошибка: {e}')
-"
-    else:
-        echo "   ❌ Конфигурация не найдена"
-    fi
-    echo ""
-}
-
-# Функция для отображения статистики трафика
-show_traffic_stats() {
-    echo -e "${YELLOW}📈 СТАТИСТИКА ТРАФИКА:${NC}"
-    
-    if [ -f /var/log/xray/access.log ]; then
-        TOTAL_CONNS=$(wc -l < /var/log/xray/access.log 2>/dev/null || echo "0")
-        echo "   • Всего подключений: $TOTAL_CONNS"
-        
-        # Топ серверов по трафику
-        echo "   • Топ серверов:"
-        tail -100 /var/log/xray/access.log 2>/dev/null | grep "proxy" | awk '{print $5}' | sort | uniq -c | sort -rn | head -5 | while read count server; do
-            echo "      $count - $server"
-        done
-    else
-        echo "   • Нет данных о трафике"
-    fi
-    echo ""
-}
-
-# Функция для отображения VLESS ключа
-show_vless_key() {
-    echo -e "${YELLOW}🔑 ВАШ VLESS КЛЮЧ (для клиентов):${NC}"
-    
-    if [ -f /usr/local/etc/xray/config.json ]; then
-        UUID=$(grep -o '"id": "[^"]*"' /usr/local/etc/xray/config.json | head -1 | cut -d'"' -f4)
-        PORT=$(grep -o '"port": [0-9]*' /usr/local/etc/xray/config.json | head -1 | awk '{print $2}')
-        PBK=$(grep -o '"publicKey": "[^"]*"' /usr/local/etc/xray/config.json | head -1 | cut -d'"' -f4)
-        SID=$(grep -o '"shortIds": \["[^"]*"' /usr/local/etc/xray/config.json | head -1 | cut -d'"' -f4)
-        SERVER_IP=$(curl -s ifconfig.me)
-        
-        if [ -z "$PBK" ]; then
-            PBK="your-public-key"
-        fi
-        if [ -z "$SID" ]; then
-            SID="your-short-id"
-        fi
-        if [ -z "$PORT" ]; then
-            PORT="443"
-        fi
-        
-        KEY="vless://${UUID}@${SERVER_IP}:${PORT}?encryption=none&security=reality&type=tcp&flow=xtls-rprx-vision&sni=www.microsoft.com&pbk=${PBK}&sid=${SID}#VPN-Balancer"
-        
-        echo "   $KEY"
-        echo ""
-        echo "   📝 Параметры ключа:"
-        echo "      • UUID: $UUID"
-        echo "      • Сервер: $SERVER_IP:$PORT"
-        echo "      • Public Key: $PBK"
-        echo "      • Short ID: $SID"
-    else
-        echo "   ❌ Конфигурация не найдена"
-    fi
-    echo ""
-}
-
-# Функция для проверки доступности
-check_connectivity() {
-    echo -e "${YELLOW}🔍 ПРОВЕРКА ДОСТУПНОСТИ:${NC}"
-    
-    SERVER_IP=$(curl -s ifconfig.me)
-    PORT=$(grep -o '"port": [0-9]*' /usr/local/etc/xray/config.json 2>/dev/null | head -1 | awk '{print $2}')
-    PORT=${PORT:-443}
-    
-    echo "   • Проверка порта $PORT:"
-    
-    # Проверка через netcat
-    if nc -zv -w 2 $SERVER_IP $PORT 2>&1 | grep -q "succeeded"; then
-        echo -e "      ${GREEN}✓ Порт открыт (netcat)${NC}"
-    else
-        echo -e "      ${RED}✗ Порт не отвечает (netcat)${NC}"
-    fi
-    
-    # Проверка через curl
-    HTTP_CODE=$(curl -o /dev/null -s -w "%{http_code}" --connect-timeout 2 http://$SERVER_IP:$PORT)
-    if [ "$HTTP_CODE" != "000" ]; then
-        echo -e "      ${GREEN}✓ HTTP ответ: $HTTP_CODE${NC}"
-    else
-        echo -e "      ${RED}✗ Нет HTTP ответа${NC}"
-    fi
-    
-    echo ""
-}
-
-# Основная функция
-main() {
-    get_system_info
-    check_xray_status
-    check_update_status
-    check_logs
-    show_servers
-    show_traffic_stats
-    show_vless_key
-    check_connectivity
-    
-    echo -e "${BLUE}════════════════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}Для просмотра логов в реальном времени:${NC}"
-    echo "  tail -f /var/log/vpn-balancer.log"
-    echo "  journalctl -u xray -f"
-    echo ""
-    echo -e "${CYAN}Для принудительного обновления:${NC}"
-    echo "  /usr/local/bin/update_servers.py"
-    echo ""
-}
-
-main
-EOF
-
-chmod +x /usr/local/bin/balancer-status
-
-cat > /usr/local/bin/balancer-logs << 'EOF'
-#!/bin/bash
-
-if [ "$1" = "-f" ]; then
-    tail -f /var/log/vpn-balancer.log
-else
-    echo "=== Последние 50 строк лога ==="
-    tail -50 /var/log/vpn-balancer.log
-    echo ""
-    echo "Для просмотра в реальном времени используйте: balancer-logs -f"
-fi
-EOF
-
-chmod +x /usr/local/bin/balancer-logs
-
-cat > /usr/local/bin/balancer-update << 'EOF'
-#!/bin/bash
-echo "🔄 Принудительное обновление списка серверов..."
-/usr/bin/python3 /usr/local/bin/update_servers.py
-echo ""
-echo "✅ Готово! Проверьте статус: balancer-status"
-EOF
-
-chmod +x /usr/local/bin/balancer-update
-
-# Добавляем алиасы в .bashrc
-cat >> ~/.bashrc << 'EOF'
-
-# Алиасы для VPN балансировщика
-alias balancer-status='/usr/local/bin/balancer-status'
-alias balancer-logs='/usr/local/bin/balancer-logs'
-alias balancer-update='/usr/local/bin/balancer-update'
-alias balancer-config='cat /usr/local/etc/xray/config.json'
-alias balancer-restart='systemctl restart xray && systemctl status xray'
-EOF
-
-source ~/.bashrc
-
-check_success "Создание скриптов мониторинга"
-
-# ==============================================
-# ФИНАЛЬНАЯ ПРОВЕРКА
-# ==============================================
-
-echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}✅ 13. ФИНАЛЬНАЯ ПРОВЕРКА${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════${NC}"
-echo ""
-
-log "Проверка работы Xray..."
 systemctl restart xray
 sleep 3
 
@@ -1524,7 +862,227 @@ else
 fi
 
 # ==============================================
-# СОХРАНЕНИЕ КЛЮЧА В ФАЙЛ
+# СОЗДАНИЕ СКРИПТОВ МОНИТОРИНГА
+# ==============================================
+
+echo ""
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}📊 13. СОЗДАНИЕ СКРИПТОВ МОНИТОРИНГА${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo ""
+
+cat > /usr/local/bin/balancer-status << 'EOF'
+#!/bin/bash
+
+# Цвета
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[0;36m'
+NC='\033[0m'
+
+echo -e "${BLUE}"
+echo '╔══════════════════════════════════════════════════════════════════════╗'
+echo '║              VPN БАЛАНСИРОВЩИК - СТАТУС                              ║'
+echo '╚══════════════════════════════════════════════════════════════════════╝'
+echo -e "${NC}"
+
+# Информация о системе
+echo -e "\n${YELLOW}📌 СИСТЕМА:${NC}"
+echo "   • Хост: $(hostname)"
+echo "   • IP: $(curl -s ifconfig.me 2>/dev/null || echo 'N/A')"
+echo "   • Время: $(date '+%Y-%m-%d %H:%M:%S')"
+
+# Статус Xray
+echo -e "\n${YELLOW}🚀 XRAY:${NC}"
+if systemctl is-active --quiet xray; then
+    echo -e "   • Статус: ${GREEN}Активен${NC}"
+else
+    echo -e "   • Статус: ${RED}Не активен${NC}"
+fi
+
+XRAY_PID=$(pgrep xray)
+if [ ! -z "$XRAY_PID" ]; then
+    echo "   • PID: $XRAY_PID"
+    echo "   • Память: $(ps -o rss= -p $XRAY_PID | awk '{printf "%.2f MB", $1/1024}')"
+fi
+
+# Проверка порта
+if ss -tlnp | grep -q ":${XRAY_PORT:-443}"; then
+    echo -e "   • Порт ${XRAY_PORT:-443}: ${GREEN}Слушается${NC}"
+else
+    echo -e "   • Порт ${XRAY_PORT:-443}: ${RED}Не слушается${NC}"
+fi
+
+# Загруженные сервера
+echo -e "\n${YELLOW}🌍 ЗАГРУЖЕННЫЕ СЕРВЕРА:${NC}"
+if [ -f /usr/local/etc/xray/config.json ]; then
+    python3 -c "
+import json
+try:
+    with open('/usr/local/etc/xray/config.json') as f:
+        config = json.load(f)
+    servers = []
+    for outbound in config.get('outbounds', []):
+        if outbound['tag'].startswith('vpn-server-'):
+            settings = outbound['settings']['vnext'][0]
+            servers.append(f\"    {outbound['tag']}: {settings['address']}:{settings['port']}\")
+    if servers:
+        for s in servers[:10]:
+            print(s)
+        if len(servers) > 10:
+            print(f'    ... и еще {len(servers)-10} серверов')
+    else:
+        print('    ❌ Сервера не загружены')
+except Exception as e:
+    print(f'    ❌ Ошибка: {e}')
+"
+else
+    echo "    ❌ Конфигурация не найдена"
+fi
+
+# Последние логи
+echo -e "\n${YELLOW}📋 ПОСЛЕДНИЕ ОБНОВЛЕНИЯ:${NC}"
+if [ -f /var/log/vpn-balancer.log ]; then
+    tail -5 /var/log/vpn-balancer.log | sed 's/^/   /'
+else
+    echo "   ❌ Лог не найден"
+fi
+
+# VLESS ключ
+echo -e "\n${YELLOW}🔑 VLESS КЛЮЧ:${NC}"
+if [ -f /root/vpn-keys/balancer-key.txt ]; then
+    KEY=$(grep -o 'vless://[^ ]*' /root/vpn-keys/balancer-key.txt | head -1)
+    if [ ! -z "$KEY" ]; then
+        echo "   $KEY"
+    else
+        echo "   ❌ Ключ не найден"
+    fi
+else
+    echo "   ❌ Файл с ключом не найден"
+fi
+
+echo ""
+EOF
+
+chmod +x /usr/local/bin/balancer-status
+
+cat > /usr/local/bin/balancer-logs << 'EOF'
+#!/bin/bash
+
+if [ "$1" = "-f" ] || [ "$1" = "--follow" ]; then
+    tail -f /var/log/vpn-balancer.log
+elif [ "$1" = "-n" ]; then
+    COUNT=${2:-50}
+    tail -n $COUNT /var/log/vpn-balancer.log
+else
+    echo "=== Последние 50 строк лога ==="
+    tail -50 /var/log/vpn-balancer.log
+    echo ""
+    echo "Использование:"
+    echo "  balancer-logs        - показать последние 50 строк"
+    echo "  balancer-logs -n 100 - показать последние 100 строк"
+    echo "  balancer-logs -f     - следить за логом в реальном времени"
+fi
+EOF
+
+chmod +x /usr/local/bin/balancer-logs
+
+cat > /usr/local/bin/balancer-update << 'EOF'
+#!/bin/bash
+
+echo "🔄 Принудительное обновление списка серверов..."
+/usr/bin/python3 /usr/local/bin/update_servers.py
+
+if [ $? -eq 0 ]; then
+    echo ""
+    echo -e "${GREEN}✅ Обновление выполнено успешно${NC}"
+    echo "   Проверьте статус: balancer-status"
+else
+    echo ""
+    echo -e "${RED}❌ Ошибка при обновлении${NC}"
+    echo "   Проверьте логи: balancer-logs"
+fi
+EOF
+
+chmod +x /usr/local/bin/balancer-update
+
+cat > /usr/local/bin/connections << 'EOF'
+#!/bin/bash
+
+# Цвета
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+case "$1" in
+    live)
+        echo -e "${YELLOW}Просмотр подключений в реальном времени (Ctrl+C для выхода):${NC}"
+        tail -f /var/log/xray/access.log | while read line; do
+            if [[ $line == *"tcp"* ]]; then
+                echo -e "${GREEN}🔌 $(date '+%H:%M:%S') - $line${NC}"
+            fi
+        done
+        ;;
+    stats)
+        echo -e "${BLUE}════════════════════════════════════════════${NC}"
+        echo -e "${YELLOW}📊 СТАТИСТИКА ПОДКЛЮЧЕНИЙ${NC}"
+        echo -e "${BLUE}════════════════════════════════════════════${NC}"
+        
+        TOTAL=$(wc -l < /var/log/xray/access.log 2>/dev/null || echo "0")
+        echo -e "Всего подключений: ${GREEN}$TOTAL${NC}"
+        
+        TODAY=$(grep -c "$(date '+%Y/%m/%d')" /var/log/xray/access.log 2>/dev/null || echo "0")
+        echo -e "За сегодня: ${CYAN}$TODAY${NC}"
+        
+        echo -e "\n${YELLOW}Топ IP адресов:${NC}"
+        tail -1000 /var/log/xray/access.log 2>/dev/null | grep -oE '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort | uniq -c | sort -rn | head -10 | while read count ip; do
+            echo -e "  ${GREEN}$ip${NC} - ${CYAN}$count${NC}"
+        done
+        ;;
+    ip)
+        if [ -z "$2" ]; then
+            echo "Использование: connections ip <IP-адрес>"
+            exit 1
+        fi
+        echo -e "${YELLOW}Подключения с IP $2:${NC}"
+        grep "$2" /var/log/xray/access.log | tail -20
+        ;;
+    help)
+        echo "Использование: connections [live|stats|ip <IP>|help]"
+        echo "  live  - просмотр в реальном времени"
+        echo "  stats - статистика подключений"
+        echo "  ip    - поиск по IP"
+        ;;
+    *)
+        echo "Использование: connections [live|stats|ip <IP>|help]"
+        tail -20 /var/log/xray/access.log 2>/dev/null
+        ;;
+esac
+EOF
+
+chmod +x /usr/local/bin/connections
+
+# Добавляем алиасы
+cat >> ~/.bashrc << EOF
+
+# Алиасы для VPN балансировщика
+alias balancer-status='/usr/local/bin/balancer-status'
+alias balancer-logs='/usr/local/bin/balancer-logs'
+alias balancer-update='/usr/local/bin/balancer-update'
+alias connections='/usr/local/bin/connections'
+alias xray-logs='journalctl -u xray -f'
+alias xray-status='systemctl status xray'
+EOF
+
+source ~/.bashrc
+check_success "Создание скриптов мониторинга"
+
+# ==============================================
+# СОХРАНЕНИЕ КЛЮЧА
 # ==============================================
 
 SERVER_IP=$(curl -s ifconfig.me)
@@ -1541,46 +1099,39 @@ ${FINAL_KEY}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📋 ПАРАМЕТРЫ КЛЮЧА:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   • UUID:        ${UUID}
   • Сервер:      ${SERVER_IP}
   • Порт:        ${XRAY_PORT}
-  • Протокол:    VLESS + Reality
-  • SNI:         www.microsoft.com
-  • Flow:        xtls-rprx-vision
   • Public Key:  ${PUBLIC_KEY}
   • Short ID:    ${SHORT_ID}
-  • Fingerprint: chrome
+  • SNI:         www.microsoft.com
 
 📊 ИНФОРМАЦИЯ О РЕПОЗИТОРИИ:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   • GitHub:      ${GITHUB_USER}/${REPO_NAME}
   • Файл:        ${KEYS_FILE}
-  • Токен:       ${GITHUB_TOKEN:0:10}... (первые 10 символов)
 
 ⚙️ КОМАНДЫ УПРАВЛЕНИЯ:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  • balancer-status     - Показать статус балансировщика
-  • balancer-logs       - Показать логи обновлений
-  • balancer-update     - Принудительно обновить список серверов
-  • balancer-config     - Показать конфигурацию
-  • balancer-restart    - Перезапустить Xray
+  • balancer-status     - Показать статус
+  • balancer-logs       - Показать логи
+  • balancer-update     - Обновить сервера
+  • connections         - Показать подключения
+  • connections live    - Подключения в реальном времени
+  • connections stats   - Статистика подключений
 
-📁 РАСПОЛОЖЕНИЕ ФАЙЛОВ:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-  • Конфигурация:       /usr/local/etc/xray/config.json
-  • Лог обновлений:     /var/log/vpn-balancer.log
-  • Лог Xray:           /var/log/xray/access.log
-  • Скрипты:            /usr/local/bin/
-  • Этот файл:          /root/vpn-keys/balancer-key.txt
+📁 ФАЙЛЫ:
+  • Конфигурация: /usr/local/etc/xray/config.json
+  • Лог обновлений: /var/log/vpn-balancer.log
+  • Лог Xray: /var/log/xray/access.log
+  • Этот файл: /root/vpn-keys/balancer-key.txt
 
 📅 ДАТА УСТАНОВКИ: $(date '+%Y-%m-%d %H:%M:%S')
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚠️  СОХРАНИТЕ ЭТОТ КЛЮЧ! ОН БОЛЬШЕ НЕ ПОКАЖЕТСЯ!
+⚠️  СОХРАНИТЕ ЭТОТ КЛЮЧ!
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 EOF
 
 chmod 600 /root/vpn-keys/balancer-key.txt
+check_success "Сохранение ключа в файл"
 
 # ==============================================
 # ФИНАЛЬНЫЙ ВЫВОД
@@ -1588,21 +1139,21 @@ chmod 600 /root/vpn-keys/balancer-key.txt
 
 clear
 echo -e "${GREEN}"
-echo '╔════════════════════════════════════════════════════════════════════════════╗'
-echo '║                                                                            ║'
-echo '║           ✅ УСТАНОВКА ЗАВЕРШЕНА ПОЛНОСТЬЮ УСПЕШНО!                       ║'
-echo '║                                                                            ║'
-echo '╚════════════════════════════════════════════════════════════════════════════╝'
+echo '╔══════════════════════════════════════════════════════════════════════╗'
+echo '║                                                                      ║'
+echo '║           ✅ УСТАНОВКА ЗАВЕРШЕНА ПОЛНОСТЬЮ УСПЕШНО!                 ║'
+echo '║                                                                      ║'
+echo '╚══════════════════════════════════════════════════════════════════════╝'
 echo -e "${NC}"
 echo ""
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${YELLOW}🔑 ВАШ ЕДИНСТВЕННЫЙ VLESS КЛЮЧ (для всех клиентов):${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 echo -e "${GREEN}${FINAL_KEY}${NC}"
 echo ""
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
 echo -e "${CYAN}📊 ЗАГРУЖЕННЫЕ СЕРВЕРА ИЗ ${KEYS_FILE}:${NC}"
@@ -1617,7 +1168,7 @@ try:
             settings = outbound['settings']['vnext'][0]
             servers.append(f\"    {outbound['tag']}: {settings['address']}:{settings['port']}\")
     if servers:
-        for s in servers[:5]:  # Показываем первые 5
+        for s in servers[:5]:
             print(s)
         if len(servers) > 5:
             print(f'    ... и еще {len(servers)-5} серверов')
@@ -1628,33 +1179,38 @@ except Exception as e:
 "
 echo ""
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}📋 ДОСТУПНЫЕ КОМАНДЫ:${NC}"
-echo -e "${CYAN}  balancer-status${NC}     - Показать полный статус балансировщика"
-echo -e "${CYAN}  balancer-logs${NC}       - Показать логи обновлений"
-echo -e "${CYAN}  balancer-update${NC}     - Принудительно обновить список серверов"
-echo -e "${CYAN}  balancer-config${NC}     - Показать конфигурацию Xray"
-echo -e "${CYAN}  balancer-restart${NC}    - Перезапустить Xray"
+echo -e "  ${CYAN}balancer-status${NC}     - Показать полный статус"
+echo -e "  ${CYAN}balancer-logs${NC}       - Показать логи обновлений"
+echo -e "  ${CYAN}balancer-update${NC}     - Принудительно обновить список серверов"
+echo -e "  ${CYAN}connections${NC}         - Показать последние подключения"
+echo -e "  ${CYAN}connections live${NC}    - Подключения в реальном времени"
+echo -e "  ${CYAN}connections stats${NC}   - Статистика подключений"
+echo -e "  ${CYAN}xray-logs${NC}           - Логи Xray в реальном времени"
+echo -e "  ${CYAN}xray-status${NC}         - Статус Xray"
 echo ""
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}📁 ВАЖНЫЕ ФАЙЛЫ:${NC}"
 echo -e "  • Ключ сохранен в: ${CYAN}/root/vpn-keys/balancer-key.txt${NC}"
 echo -e "  • Конфигурация: ${CYAN}/usr/local/etc/xray/config.json${NC}"
 echo -e "  • Лог обновлений: ${CYAN}/var/log/vpn-balancer.log${NC}"
+echo -e "  • Лог подключений: ${CYAN}/var/log/xray/access.log${NC}"
 echo ""
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}🔍 ПРОВЕРКА РАБОТЫ:${NC}"
-echo -e "  • Запустите ${CYAN}balancer-status${NC} для полной диагностики"
+echo -e "  • Запустите: ${CYAN}balancer-status${NC}"
 echo -e "  • Или выполните: ${CYAN}curl -I http://${SERVER_IP}:${XRAY_PORT}${NC}"
 echo ""
 
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
-echo -e "${RED}⚠️  ВАЖНО: Сохраните ключ из этого окна!${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${RED}⚠️  СОХРАНИТЕ КЛЮЧ ИЗ ЭТОГО ОКНА!${NC}"
 echo -e "${RED}   Он также сохранен в файле /root/vpn-keys/balancer-key.txt${NC}"
-echo -e "${YELLOW}════════════════════════════════════════════════════════════════════════════${NC}"
+echo -e "${YELLOW}══════════════════════════════════════════════════════════════════════${NC}"
 echo ""
 
-# Проверка статуса в конце
-/usr/local/bin/balancer-status | head -20
+# Финальная проверка
+sleep 2
+/usr/local/bin/balancer-status | head -15
